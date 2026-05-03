@@ -1,0 +1,371 @@
+{
+  "name": "Gmail Auto-Categorizzazione con ChatGPT (3 Categorie)",
+  "nodes": [
+    {
+      "parameters": {
+        "width": 580,
+        "height": 1041,
+        "color": 4,
+        "content": "## Gmail Auto-Categorizzazione Intelligente\n\n## Cosa fa questo workflow\n\nCategorizza automaticamente le email Gmail in arrivo usando ChatGPT (GPT-4o-mini) e applica etichette in base al contenuto:\n- **Alta Priorità**: Email urgenti che richiedono risposta immediata\n- **Finanza e Fatturazione**: Fatture, pagamenti, documenti finanziari\n- **Promozione**: Marketing, newsletter, offerte commerciali\n\n## Setup Prerequisiti\n\n1. **Crea 3 label in Gmail**:\n   - Alta Priorità\n   - Finanza e Fatturazione\n   - Promozione\n\n2. **Configura credenziali in n8n**:\n   - Gmail OAuth2\n   - OpenAI API Key\n\n3. **Importa workflow e attiva**\n\n## Configurazione\n\n- ✅ Polling ogni 5 minuti\n- ✅ Una sola etichetta per email\n- ✅ Email rimangono in Inbox\n- ✅ GPT-4o-mini (economico)\n- ✅ Costo: ~$0.17 per 1000 email\n\n## Testing\n\nInvia 9 email di test (3 per categoria) prima di attivare in produzione."
+      },
+      "id": "sticky-note-info",
+      "name": "Sticky Note Info",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [20, -140],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "width": 240,
+        "height": 350,
+        "content": "### Gmail Trigger\nMonitora nuove email in arrivo ogni 5 minuti.\n\n✅ Filtra solo INBOX\n✅ Solo email unread\n✅ Polling: 5 minuti"
+      },
+      "id": "sticky-note-trigger",
+      "name": "Sticky Note Trigger",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [660, 20],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "width": 240,
+        "height": 350,
+        "content": "### Get Message\nRecupera il contenuto completo dell'email per analisi AI."
+      },
+      "id": "sticky-note-get",
+      "name": "Sticky Note Get",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [920, 20],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "width": 380,
+        "height": 350,
+        "content": "### Categorizzazione AI\nChatGPT analizza il contenuto e assegna UNA categoria.\n\n⚠️ Prompt ottimizzato per 3 categorie italiane"
+      },
+      "id": "sticky-note-ai",
+      "name": "Sticky Note AI",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1180, 20],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "width": 240,
+        "height": 320,
+        "content": "### JSON Schema\nOutput strutturato per singola categoria.\n\n✅ AutoFix abilitato"
+      },
+      "id": "sticky-note-parser",
+      "name": "Sticky Note Parser",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [1400, 400],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "width": 226,
+        "height": 347,
+        "content": "### Merge Labels\nCombina categoria AI con Label ID Gmail."
+      },
+      "id": "sticky-note-merge",
+      "name": "Sticky Note Merge",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [2120, 40],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "width": 452,
+        "height": 347,
+        "content": "### Applica Label\nAggiunge l'etichetta all'email in Gmail.\n\n✅ Email rimane in Inbox"
+      },
+      "id": "sticky-note-apply",
+      "name": "Sticky Note Apply",
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [2380, 40],
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "simple": false,
+        "filters": {
+          "labelIds": ["INBOX"],
+          "readStatus": "unread"
+        },
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyX",
+              "unit": "minutes",
+              "value": 5
+            }
+          ]
+        }
+      },
+      "id": "gmail-trigger",
+      "name": "Gmail Trigger",
+      "type": "n8n-nodes-base.gmailTrigger",
+      "position": [720, 200],
+      "typeVersion": 1.2,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIALS_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}",
+        "simple": false
+      },
+      "id": "get-message",
+      "name": "Get Message Content",
+      "type": "n8n-nodes-base.gmail",
+      "position": [980, 200],
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIALS_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Get Message Content').item.json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "Come Assistente AI, il tuo compito è categorizzare messaggi Gmail in UNA SOLA delle seguenti etichette:\n\n**Alta Priorità** - Email che richiedono attenzione o risposta immediata:\n- Domande dirette che richiedono il tuo input\n- Richieste con scadenze temporali urgenti\n- Comunicazioni importanti da clienti\n- Questioni urgenti da colleghi o management\n- Action items assegnati specificamente a te\n- Email con parole come: urgente, importante, scadenza, deadline\n\n**Finanza e Fatturazione** - Email relative a finanza e contabilità:\n- Fatture (inviate o ricevute)\n- Conferme o richieste di pagamento\n- Estratti conto bancari e notifiche transazioni\n- Documenti fiscali e report finanziari\n- Comunicazioni contabili e amministrative\n- Rimborsi spese\n- Email con parole come: fattura, invoice, pagamento, payment, bolletta, bill\n\n**Promozione** - Contenuti marketing e promozionali:\n- Newsletter marketing\n- Pitch di vendita e cold outreach\n- Offerte promozionali e sconti\n- Inviti a eventi (focus marketing)\n- Annunci prodotti da vendor\n- Email pubblicitarie\n- Email con parole come: offerta, sconto, promozione, newsletter\n\n**Regole Critiche:**\n1. Scegli SOLO UNA categoria (la più rilevante)\n2. Analizza attentamente: subject line, mittente, e contenuto body\n3. Considera reputazione mittente e contesto\n4. In caso di ambiguità tra \"Alta Priorità\" e altro, prioritizza \"Alta Priorità\" SOLO se richiede azione immediata\n5. Parole chiave finanziarie (fattura, pagamento, invoice, payment, bill) → SEMPRE \"Finanza e Fatturazione\"\n6. Newsletter e contenuti marketing chiari → SEMPRE \"Promozione\"\n7. Se non sei sicuro al 100%, scegli la categoria che meglio rappresenta l'intento principale\n\nRitorna SOLO il nome della categoria in formato JSON come specificato. Non fare assunzioni o aggiungere categorie non elencate.\n\n**Analisi Email:**\nSubject: {{ $('Get Message Content').item.json.subject }}\nFrom: {{ $('Get Message Content').item.json.from }}\nBody Preview: {{ $('Get Message Content').item.json.snippet }}"
+            }
+          ]
+        },
+        "hasOutputParser": true
+      },
+      "id": "llm-chain",
+      "name": "Assign Category",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "position": [1240, 200],
+      "typeVersion": 1.5
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "options": {
+          "temperature": 0.3,
+          "maxTokens": 300,
+          "responseFormat": "json_object"
+        }
+      },
+      "id": "openai-model",
+      "name": "OpenAI GPT-4o-mini",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "position": [1220, 420],
+      "typeVersion": 1.2,
+      "credentials": {
+        "openAiApi": {
+          "id": "YOUR_OPENAI_CREDENTIALS_ID",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schemaType": "manual",
+        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"category\": {\n      \"type\": \"string\",\n      \"enum\": [\"Alta Priorità\", \"Finanza e Fatturazione\", \"Promozione\"],\n      \"description\": \"La categoria più rilevante per questa email\"\n    }\n  },\n  \"required\": [\"category\"]\n}",
+        "autoFix": true
+      },
+      "id": "json-parser",
+      "name": "JSON Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "position": [1460, 420],
+      "typeVersion": 1.2
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "category-assignment",
+              "name": "category",
+              "type": "string",
+              "value": "={{ $json.output.category }}"
+            }
+          ]
+        }
+      },
+      "id": "set-category",
+      "name": "Set Category Value",
+      "type": "n8n-nodes-base.set",
+      "position": [1620, 200],
+      "typeVersion": 3.4
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "returnAll": true
+      },
+      "id": "get-labels",
+      "name": "Get All Gmail Labels",
+      "type": "n8n-nodes-base.gmail",
+      "position": [1840, 80],
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIALS_ID",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "name",
+              "field2": "category"
+            }
+          ]
+        }
+      },
+      "id": "merge-labels",
+      "name": "Merge Category to Label ID",
+      "type": "n8n-nodes-base.merge",
+      "position": [2180, 140],
+      "typeVersion": 3.1
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": "={{ [$json.id] }}"
+      },
+      "id": "add-label",
+      "name": "Add Label to Message",
+      "type": "n8n-nodes-base.gmail",
+      "position": [2440, 140],
+      "typeVersion": 2.1,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "YOUR_GMAIL_CREDENTIALS_ID",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Message Content",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Message Content": {
+      "main": [
+        [
+          {
+            "node": "Assign Category",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assign Category": {
+      "main": [
+        [
+          {
+            "node": "Set Category Value",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI GPT-4o-mini": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Assign Category",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "JSON Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Assign Category",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Category Value": {
+      "main": [
+        [
+          {
+            "node": "Get All Gmail Labels",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Category to Label ID",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get All Gmail Labels": {
+      "main": [
+        [
+          {
+            "node": "Merge Category to Label ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Category to Label ID": {
+      "main": [
+        [
+          {
+            "node": "Add Label to Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "custom-v1.0",
+  "meta": {
+    "templateCredsSetupCompleted": false,
+    "instanceId": ""
+  },
+  "tags": []
+}
