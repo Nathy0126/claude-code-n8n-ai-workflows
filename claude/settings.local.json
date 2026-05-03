@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(claude mcp add:*)",
+      "Bash(claude plugin install:*)",
+      "Bash(claude plugin marketplace list:*)",
+      "Bash(claude plugin marketplace add:*)",
+      "Bash(claude plugin list:*)",
+      "Bash(claude plugin marketplace get:*)",
+      "Bash(claude plugin:*)",
+      "Bash(git clone:*)",
+      "mcp__n8n-mcp__tools_documentation",
+      "mcp__n8n-mcp__search_nodes",
+      "mcp__n8n-mcp__search_templates",
+      "mcp__n8n-mcp__get_node",
+      "mcp__n8n-mcp__get_template",
+      "Bash(pip install openpyxl -q)",
+      "Bash(python -c \"import openpyxl; print\\(''openpyxl'', openpyxl.__version__, ''OK''\\)\")"
+    ]
+  }
+}
